@@ -1,4 +1,4 @@
-%% Juego para el tutorial 
+%% Juego para el tutorial con 2 jugadores sin lider
 graphics_toolkit('gnuplot') 
 clear all
 close all
