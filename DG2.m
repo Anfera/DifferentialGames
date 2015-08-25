@@ -6,7 +6,7 @@ clc
 
 % Definimos las variables del problema
 T = 1;
-dt = 0.1;
+dt = 0.01;
 tspan = 0:dt:T;
 x0 = [rand(1,5) 1]';
 veces = 1;
@@ -16,7 +16,7 @@ a2 = -0;
 a3 = -0;
 a4 = -0;
 a5 = -0;
-a0 = -1
+a0 = -1;  %Aqui es necesario añadir el K del último tanque
 
 b1 = 1;
 b2 = 1;
@@ -25,7 +25,7 @@ b4 = 1;
 b5 = 1;
 
 A = diag([a1 a2 a3 a4 a5 a0]);
-B = [-b1 0 0 0 0; b1 -b2 0 0 0; 0 b2 -b3 0 0; 0 0 b3 -b4 0; 0 0 0 b4 -b5; 0 0 0 0 b5];
+B = [-b1 0 0 0 0; 0 -b2 0 0 0; b1 b2 -b3 0 0; 0 0 0 -b4 0; 0 0 0 0 -b5; 0 0 b3 b4 b5];
 B1 = B(:,1);
 B2 = B(:,2);
 B3 = B(:,3);
