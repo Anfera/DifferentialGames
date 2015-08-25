@@ -5,16 +5,16 @@ clc
 
 load('Inflows.mat'); %Cargamos las variables de lluvia del problema
 % Definimos las variables del problema
-T = 0.05; 	% Esta variable es el horizonte de prediccion en horas
-tspan = t;	% Tiempo de simulacion definido en SWMM
-x0 = zeros(6,1); % Los tanques empiezan descargados
+T = 0.05;           % Esta variable es el horizonte de prediccion en horas
+tspan = t;          % Tiempo de simulacion definido en SWMM
+x0 = zeros(6,1);    % Los tanques empiezan descargados
 
 a1 = -0;
 a2 = -0;
 a3 = -0;
 a4 = -0;
 a5 = -0;
-a0 = -K(6);  % Aqui es necesario añadir el K del último tanque
+a0 = -K(6);     % Aqui es necesario añadir el K del último tanque
 
 A = 3600*diag([a1 a2 a3 a4 a5 a0]); % K fue calculado en segundos, por eso el 3600
 B = [-1 0 0 0 0; 
@@ -89,15 +89,19 @@ for i = 1:length(tspan)-1
 	u3(i) = max(0,-inv(R3)*B3'*y_0((3*size(A,1)+1:4*size(A,1)),1));
 	u4(i) = max(0,-inv(R4)*B4'*y_0((4*size(A,1)+1:5*size(A,1)),1));
 	u5(i) = max(0,-inv(R5)*B5'*y_0((5*size(A,1)+1:6*size(A,1)),1));
+    
 	x(:,i+1) = x(:,i) + dt*(A*x(:,i) + B1*u1(i) + B2*u2(i) + B3*u3(i) + B4*u4(i) + B5*u5(i)) + dt*[inflows(i,1) inflows(i,2) 0 inflows(i,3) inflows(i,4) 0]';
 end
 
-% Plots
+%% Plots
 figure
 subplot(2,1,1)	
-plot(x')
+plot(t',3600*x')
 legend(['v_1'; 'v_2'; 'v_3'; 'v_4'; 'v_5';'v_6']);
+ylabel('volume [m^3]')
 subplot(2,1,2)
 U = [u1' u2' u3' u4' u5'];
-stairs(U)
+stairs(t(1:end-1),U)
 legend(['q_1'; 'q_2'; 'q_3'; 'q_4'; 'q_5']);
+xlabel('time [h]')
+ylabel('flow [m^3/s]')
