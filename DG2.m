@@ -1,42 +1,40 @@
 %% Prueba de Differential Game con 5 agentes y 1 lider
-graphics_toolkit('gnuplot') 
 clear all
 close all
 clc
 
+load('Inflows.mat'); %Cargamos las variables de lluvia del problema
 % Definimos las variables del problema
-veces = 5;
-T = 1;
-dt = 0.01;
-tspan = 0:dt:veces*T;
-x0 = [1 2 3 4 5 6]';
+T = 0.05; 	% Esta variable es el horizonte de prediccion en horas
+tspan = t;	% Tiempo de simulacion definido en SWMM
+x0 = zeros(6,1); % Los tanques empiezan descargados
 
 a1 = -0;
 a2 = -0;
 a3 = -0;
 a4 = -0;
 a5 = -0;
-a0 = -10;  %Aqui es necesario añadir el K del último tanque
+a0 = -K(6);  % Aqui es necesario añadir el K del último tanque
 
-b1 = 1;
-b2 = 1;
-b3 = 1;
-b4 = 1;
-b5 = 1;
-
-A = diag([a1 a2 a3 a4 a5 a0]);
-B = [-b1 0 0 0 0; 0 -b2 0 0 0; b1 b2 -b3 0 0; 0 0 0 -b4 0; 0 0 0 0 -b5; 0 0 b3 b4 b5];
+A = 3600*diag([a1 a2 a3 a4 a5 a0]); % K fue calculado en segundos, por eso el 3600
+B = [-1 0 0 0 0; 
+    0 -1 0 0 0; 
+    1 1 -1 0 0;
+    0 0 0 -1 0; 
+    0 0 0 0 -1; 
+    0 0 1 1 1]; % Esta matriz contiene la interaccion entre tanques, recordar el grafo.
 B1 = B(:,1);
 B2 = B(:,2);
 B3 = B(:,3);
 B4 = B(:,4);
 B5 = B(:,5);
 
-Q1 = 20*[1 0 -1 0 0 0; 0 0 0 0 0 0; -1 0 1 0 0 0; 0 0 0 0 0 0; 0 0 0 0 0 0; 0 0 0 0 0 0];
-Q2 = 20*[0 0 0 0 0 0; 0 1 -1 0 0 0; 0 -1 1 0 0 0; 0 0 0 0 0 0; 0 0 0 0 0 0; 0 0 0 0 0 0];
-Q3 = 10*[0 0 0 0 0 0; 0 0 0 0 0 0; 0 0 1 0 0 -1; 0 0 0 0 0 0; 0 0 0 0 0 0; 0 0 -1 0 0 1];
-Q4 = 20*[0 0 0 0 0 0; 0 0 0 0 0 0; 0 0 0 0 0 0; 0 0 0 1 0 -1; 0 0 0 0 0 0; 0 0 0 -1 0 1];
-Q5 = 20*[0 0 0 0 0 0; 0 0 0 0 0 0; 0 0 0 0 0 0; 0 0 0 0 0 0; 0 0 0 0 1 -1; 0 0 0 0 -1 1];
+% Empezamos el differential Game. Todo es sacado de Dynamic Optimization and LQ Differential Games
+Q1 = 50*[1 0 -1 0 0 0; 0 0 0 0 0 0; -1 0 1 0 0 0; 0 0 0 0 0 0; 0 0 0 0 0 0; 0 0 0 0 0 0];
+Q2 = 50*[0 0 0 0 0 0; 0 1 -1 0 0 0; 0 -1 1 0 0 0; 0 0 0 0 0 0; 0 0 0 0 0 0; 0 0 0 0 0 0];
+Q3 = 50*[0 0 0 0 0 0; 0 0 0 0 0 0; 0 0 1 0 0 -1; 0 0 0 0 0 0; 0 0 0 0 0 0; 0 0 -1 0 0 50];
+Q4 = 50*[0 0 0 0 0 0; 0 0 0 0 0 0; 0 0 0 0 0 0; 0 0 0 1 0 -1; 0 0 0 0 0 0; 0 0 0 -1 0 50];
+Q5 = 50*[0 0 0 0 0 0; 0 0 0 0 0 0; 0 0 0 0 0 0; 0 0 0 0 0 0; 0 0 0 0 1 -1; 0 0 0 0 -1 50];
 
 R1 = 1;
 R2 = 1;
@@ -77,40 +75,29 @@ Q_ = [zeros(size(A,1),size(A,1)*size(A,2));
           -Q4 zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) eye(size(A,1)) zeros(size(A,1),size(A,2));
           -Q5 zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) eye(size(A,1))];
 
+% Ahora empezamos a resolver el sistema      
 x = zeros(size(A,1),length(tspan));
 x(:,1) = x0;
-d = zeros(size(A,1),length(tspan));
-%d(size(A,1),25) = 0.5;
 
 for i = 1:length(tspan)-1
-	i
+	[i length(tspan)-1]
+	
 	y_0 = (P + Q_*expm(T*M))\[x(:,i);zeros(5*size(A,1),1)];
-	%for k = 1:length(tspan)
-	%y(:,k) = expm(M*tspan(k))*y_0;
-	%end
-	u1(i) = -inv(R1)*B1'*y_0((1*size(A,1)+1:2*size(A,1)),1);
-	u2(i) = -inv(R2)*B2'*y_0((2*size(A,1)+1:3*size(A,1)),1);
-	u3(i) = -inv(R3)*B3'*y_0((3*size(A,1)+1:4*size(A,1)),1);
-	u4(i) = -inv(R4)*B4'*y_0((4*size(A,1)+1:5*size(A,1)),1);
-	u5(i) = -inv(R5)*B5'*y_0((5*size(A,1)+1:6*size(A,1)),1);
-	x(:,i+1) = x(:,i) + dt*(A*x(:,i) + B1*u1(i) + B2*u2(i) + B3*u3(i) + B4*u4(i) + B5*u5(i)) + d(:,i);
+
+	u1(i) = max(0,-inv(R1)*B1'*y_0((1*size(A,1)+1:2*size(A,1)),1));
+	u2(i) = max(0,-inv(R2)*B2'*y_0((2*size(A,1)+1:3*size(A,1)),1));
+	u3(i) = max(0,-inv(R3)*B3'*y_0((3*size(A,1)+1:4*size(A,1)),1));
+	u4(i) = max(0,-inv(R4)*B4'*y_0((4*size(A,1)+1:5*size(A,1)),1));
+	u5(i) = max(0,-inv(R5)*B5'*y_0((5*size(A,1)+1:6*size(A,1)),1));
+	x(:,i+1) = x(:,i) + dt*(A*x(:,i) + B1*u1(i) + B2*u2(i) + B3*u3(i) + B4*u4(i) + B5*u5(i)) + dt*[inflows(i,1) inflows(i,2) 0 inflows(i,3) inflows(i,4) 0]';
 end
 
+% Plots
 figure
 subplot(2,1,1)	
 plot(x')
-try
-  legend(["v 1"; "v 2"; "v 3"; "v 4"; "v 5";"v 6"], 
-          "location", "northeast",
-          "orientation", "vertical");
-catch
-end_try_catch
+legend(['v_1'; 'v_2'; 'v_3'; 'v_4'; 'v_5';'v_6']);
 subplot(2,1,2)
 U = [u1' u2' u3' u4' u5'];
 stairs(U)
-try
-  legend(["q 1"; "q 2"; "q 3"; "q 4"; "q 5"], 
-          "location", "northeast",
-          "orientation", "vertical");
-catch
-end_try_catch
+legend(['q_1'; 'q_2'; 'q_3'; 'q_4'; 'q_5']);
