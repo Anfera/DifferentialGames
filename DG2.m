@@ -5,18 +5,18 @@ close all
 clc
 
 % Definimos las variables del problema
+veces = 5;
 T = 1;
 dt = 0.01;
-tspan = 0:dt:T;
-x0 = [rand(1,5) 1]';
-veces = 1;
+tspan = 0:dt:veces*T;
+x0 = [1 2 3 4 5 6]';
 
 a1 = -0;
 a2 = -0;
 a3 = -0;
 a4 = -0;
 a5 = -0;
-a0 = -1;  %Aqui es necesario añadir el K del último tanque
+a0 = -10;  %Aqui es necesario añadir el K del último tanque
 
 b1 = 1;
 b2 = 1;
@@ -77,22 +77,22 @@ Q_ = [zeros(size(A,1),size(A,1)*size(A,2));
           -Q4 zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) eye(size(A,1)) zeros(size(A,1),size(A,2));
           -Q5 zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) eye(size(A,1))];
 
-x = zeros(size(A,1),veces*length(tspan));
+x = zeros(size(A,1),length(tspan));
 x(:,1) = x0;
-d = zeros(size(A,1),veces*length(tspan));
+d = zeros(size(A,1),length(tspan));
 %d(size(A,1),25) = 0.5;
 
-for i = 1:veces*length(tspan)-1
+for i = 1:length(tspan)-1
 	i
 	y_0 = (P + Q_*expm(T*M))\[x(:,i);zeros(5*size(A,1),1)];
-	for k = 1:length(tspan)
-	y(:,k) = expm(M*tspan(k))*y_0;
-	end
-	u1(i) = -inv(R1)*B1'*y((1*size(A,1)+1:2*size(A,1)),1);
-	u2(i) = -inv(R2)*B2'*y((2*size(A,1)+1:3*size(A,1)),1);
-	u3(i) = -inv(R3)*B3'*y((3*size(A,1)+1:4*size(A,1)),1);
-	u4(i) = -inv(R4)*B4'*y((4*size(A,1)+1:5*size(A,1)),1);
-	u5(i) = -inv(R5)*B5'*y((5*size(A,1)+1:6*size(A,1)),1);
+	%for k = 1:length(tspan)
+	%y(:,k) = expm(M*tspan(k))*y_0;
+	%end
+	u1(i) = -inv(R1)*B1'*y_0((1*size(A,1)+1:2*size(A,1)),1);
+	u2(i) = -inv(R2)*B2'*y_0((2*size(A,1)+1:3*size(A,1)),1);
+	u3(i) = -inv(R3)*B3'*y_0((3*size(A,1)+1:4*size(A,1)),1);
+	u4(i) = -inv(R4)*B4'*y_0((4*size(A,1)+1:5*size(A,1)),1);
+	u5(i) = -inv(R5)*B5'*y_0((5*size(A,1)+1:6*size(A,1)),1);
 	x(:,i+1) = x(:,i) + dt*(A*x(:,i) + B1*u1(i) + B2*u2(i) + B3*u3(i) + B4*u4(i) + B5*u5(i)) + d(:,i);
 end
 
