@@ -5,17 +5,18 @@ clc
 
 load('Inflows.mat'); %Cargamos las variables de lluvia del problema
 % Definimos las variables del problema
-T = 0.05;           % Esta variable es el horizonte de prediccion en horas
-tspan = t;          % Tiempo de simulacion definido en SWMM
-x0 = zeros(6,1);    % Los tanques empiezan descargados
-vmax = vmax/3600;
+T = 1;               % Esta variable es el horizonte de prediccion en horas
+tspan = t;           % Tiempo de simulacion definido en SWMM
+x0 = zeros(6,1);     % Los tanques empiezan descargados
+vmax = vmax/3600;    % El 3600 es por la integración utilizada
+%vmax(6) = 1;
 
 a1 = -0;
 a2 = -0;
 a3 = -0;
 a4 = -0;
 a5 = -0;
-a0 = -K(6);     % Aqui es necesario añadir el K del último tanque
+a0 = -K(6);          % Aqui es necesario añadir el K del último tanque
 
 A = 3600*diag([a1 a2 a3 a4 a5 a0]); % K fue calculado en segundos, por eso el 3600
 B = [-1 0 0 0 0; 
@@ -50,31 +51,31 @@ S4 = B4*inv(R4)*B4';
 S5 = B5*inv(R5)*B5';
 
 D = [A' zeros(size(A)) zeros(size(A)) zeros(size(A)) zeros(size(A)); 
-zeros(size(A)) A' zeros(size(A)) zeros(size(A)) zeros(size(A));
-zeros(size(A)) zeros(size(A)) A' zeros(size(A)) zeros(size(A));
-zeros(size(A)) zeros(size(A)) zeros(size(A)) A' zeros(size(A));
-zeros(size(A)) zeros(size(A)) zeros(size(A)) zeros(size(A)) A']; 
+     zeros(size(A)) A' zeros(size(A)) zeros(size(A)) zeros(size(A));
+     zeros(size(A)) zeros(size(A)) A' zeros(size(A)) zeros(size(A));
+     zeros(size(A)) zeros(size(A)) zeros(size(A)) A' zeros(size(A));
+     zeros(size(A)) zeros(size(A)) zeros(size(A)) zeros(size(A)) A']; 
 
 S = [S1 S2 S3 S4 S5];
 
 Q = [Q1; Q2; Q3; Q4; Q5];
 
 M = [A -S1 -S2 -S3 -S4 -S5; 
-        -Q1 -A' zeros(size(A)) zeros(size(A)) zeros(size(A)) zeros(size(A)); 
-        -Q2 zeros(size(A)) -A' zeros(size(A)) zeros(size(A)) zeros(size(A));
-        -Q3 zeros(size(A)) zeros(size(A)) -A' zeros(size(A)) zeros(size(A));
-        -Q4 zeros(size(A)) zeros(size(A)) zeros(size(A)) -A' zeros(size(A));
-        -Q5 zeros(size(A)) zeros(size(A)) zeros(size(A)) zeros(size(A)) -A'];
+     -Q1 -A' zeros(size(A)) zeros(size(A)) zeros(size(A)) zeros(size(A)); 
+     -Q2 zeros(size(A)) -A' zeros(size(A)) zeros(size(A)) zeros(size(A));
+     -Q3 zeros(size(A)) zeros(size(A)) -A' zeros(size(A)) zeros(size(A));
+     -Q4 zeros(size(A)) zeros(size(A)) zeros(size(A)) -A' zeros(size(A));
+     -Q5 zeros(size(A)) zeros(size(A)) zeros(size(A)) zeros(size(A)) -A'];
         
 P = zeros(size(A,1)*size(A,1),size(A,1)*size(A,2));
 P(1:size(A,1),1:size(A,2)) = eye(size(A,1));
 
 Q_ = [zeros(size(A,1),size(A,1)*size(A,2));
-          -Q1 eye(size(A,1)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2));
-          -Q2 zeros(size(A,1),size(A,2)) eye(size(A,1)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2));
-          -Q3 zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) eye(size(A,1)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2));
-          -Q4 zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) eye(size(A,1)) zeros(size(A,1),size(A,2));
-          -Q5 zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) eye(size(A,1))];
+      -Q1 eye(size(A,1)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2));
+      -Q2 zeros(size(A,1),size(A,2)) eye(size(A,1)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2));
+      -Q3 zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) eye(size(A,1)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2));
+      -Q4 zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) eye(size(A,1)) zeros(size(A,1),size(A,2));
+      -Q5 zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) zeros(size(A,1),size(A,2)) eye(size(A,1))];
 
 % Ahora empezamos a resolver el sistema      
 x = zeros(size(A,1),length(tspan));
@@ -98,61 +99,62 @@ end
 
 %% Plots
 figure
-subplot(2,1,1)	
+subplot(2,2,1)	
 plot(t',x')
 legend(['v_1'; 'v_2'; 'v_3'; 'v_4'; 'v_5';'v_6']);
 ylabel('% of occupancy')
-subplot(2,1,2)
+subplot(2,2,3)
 stairs(t(1:end-1),U)
 legend(['q_1'; 'q_2'; 'q_3'; 'q_4'; 'q_5']);
 xlabel('time [h]')
 ylabel('flow [m^3/s]')
 
-figure
+%figure
+subplot(2,2,[2,4])
 plot(t(1:end-1),v)
 legend(['v_1'; 'v_2'; 'v_3'; 'v_4'; 'v_5';'v_6']);
-ylabel('flow [m^3/s]')
+xlabel('time [h]')
 ylabel('volume [m^3]')
 
 
-figure
-subplot(2,3,1)
-plot(t(1:end-1),v(:,1))
-hold on
-plot(t(1:end-1),ones(size(v,1),1)*vmax(1),'--')
-legend('v_1','v_{1max}');
-ylabel('volume [m^3]')
-
-subplot(2,3,2)
-plot(t(1:end-1),v(:,2))
-hold on
-plot(t(1:end-1),ones(size(v,1),1)*vmax(2),'--')
-legend('v_2', 'v_{2max}');
-
-subplot(2,3,3)
-plot(t(1:end-1),v(:,3))
-hold on
-plot(t(1:end-1),ones(size(v,1),1)*vmax(3),'--')
-legend('v_3', 'v_{3max}');
-
-subplot(2,3,4)
-plot(t(1:end-1),v(:,4))
-hold on
-plot(t(1:end-1),ones(size(v,1),1)*vmax(4),'--')
-legend('v_4', 'v_{4max}');
-ylabel('volume [m^3]')
-xlabel('time [h]')
-
-subplot(2,3,5)
-plot(t(1:end-1),v(:,5))
-hold on
-plot(t(1:end-1),ones(size(v,1),1)*vmax(5),'--')
-legend('v_5', 'v_{5max}');
-xlabel('time [h]')
-
-subplot(2,3,6)
-plot(t(1:end-1),v(:,6))
-hold on
-plot(t(1:end-1),ones(size(v,1),1)*vmax(6),'--')
-legend('v_6', 'v_{6max}');
-xlabel('time [h]')
+% figure
+% subplot(2,3,1)
+% plot(t(1:end-1),v(:,1))
+% hold on
+% plot(t(1:end-1),ones(size(v,1),1)*vmax(1),'--')
+% legend('v_1','v_{1max}');
+% ylabel('volume [m^3]')
+% 
+% subplot(2,3,2)
+% plot(t(1:end-1),v(:,2))
+% hold on
+% plot(t(1:end-1),ones(size(v,1),1)*vmax(2),'--')
+% legend('v_2', 'v_{2max}');
+% 
+% subplot(2,3,3)
+% plot(t(1:end-1),v(:,3))
+% hold on
+% plot(t(1:end-1),ones(size(v,1),1)*vmax(3),'--')
+% legend('v_3', 'v_{3max}');
+% 
+% subplot(2,3,4)
+% plot(t(1:end-1),v(:,4))
+% hold on
+% plot(t(1:end-1),ones(size(v,1),1)*vmax(4),'--')
+% legend('v_4', 'v_{4max}');
+% ylabel('volume [m^3]')
+% xlabel('time [h]')
+% 
+% subplot(2,3,5)
+% plot(t(1:end-1),v(:,5))
+% hold on
+% plot(t(1:end-1),ones(size(v,1),1)*vmax(5),'--')
+% legend('v_5', 'v_{5max}');
+% xlabel('time [h]')
+% 
+% subplot(2,3,6)
+% plot(t(1:end-1),v(:,6))
+% hold on
+% plot(t(1:end-1),ones(size(v,1),1)*vmax(6),'--')
+% legend('v_6', 'v_{6max}');
+% xlabel('time [h]')
